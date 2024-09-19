@@ -43,4 +43,4 @@ The database system will focus on managing the following entities:
 - Rahul Bothra
 - Yuchen Huang
 - Om Dhinoja
-- Rahul Manohar
+- Rahul Manohar Durshinapally
