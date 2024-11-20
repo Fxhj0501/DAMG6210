@@ -70,7 +70,7 @@ CREATE TABLE Customer (
 );
 
 -- Order table
-CREATE TABLE [Order] (
+CREATE TABLE Orders (
      order_id INT IDENTITY(1,1) PRIMARY KEY,
      customer_id INT NOT NULL,
      order_amount DECIMAL(10, 2) CHECK (order_amount >= 0),
