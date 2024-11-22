@@ -259,7 +259,7 @@
             .then(responseText => {
                 if (responseText === "delete success") {
                     alert("Record deleted successfully.");
-                    fetchData(tableName);
+                    fetchData(1, pageSize);
                 } else {
                     alert("Failed to delete record. Backend response: " + responseText);
                 }

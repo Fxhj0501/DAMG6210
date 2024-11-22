@@ -14,38 +14,40 @@ BEGIN
     );
 END;
 
-CREATE TRIGGER trg_exhibition_delete_tickets
+Create TRIGGER trg_exhibition_delete_tickets
     ON Exhibition
-    AFTER DELETE
+    INSTEAD OF DELETE
     AS
 BEGIN
-    -- DELETE tickets for deleted exhibitions
     DELETE FROM Tickets
     WHERE exhibition_id IN (
         SELECT exhibition_id FROM Deleted
     );
+
+    DELETE FROM Exhibition
+    WHERE exhibition_id IN (
+        SELECT exhibition_id FROM Deleted
+    );
 END;
-    DROP TRIGGER IF EXISTS trg_order_delete_tickets;
+
 
     CREATE TRIGGER trg_order_delete_tickets
         ON Orders
         INSTEAD OF DELETE
         AS
     BEGIN
-        -- 删除与被删除订单相关的 Tickets
+        -- delete related tickets first
         DELETE FROM Tickets
         WHERE order_id IN (
             SELECT order_id FROM Deleted
         );
 
-        -- 删除 Order 表中的记录
+        -- delete related orders
         DELETE FROM Orders
         WHERE order_id IN (
             SELECT order_id FROM Deleted
         );
     END;
-
-
 
 
 

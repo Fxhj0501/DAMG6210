@@ -2,10 +2,7 @@ package com.dmdd.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.dmdd.dao.Stall;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.*;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -23,10 +20,14 @@ public interface StallMapper extends BaseMapper<Stall> {
     @Delete("DELETE FROM Sponsor WHERE stall_id = #{stallId}")
     int deleteById(@Param("stallId") Long stallId);
 
-    @Query("SELECT * FROM Stall WHERE exhibition_id = #{exhibitionId}")
+    @Select("SELECT * FROM Stall WHERE exhibition_id = #{exhibitionId}")
     List<Stall> findByExhibitionId(@Param("exhibitionId") Long exhibitionId);
 
-    @Query("SELECT * FROM Stall WHERE game_id = #{gameId}")
+    @Select("SELECT * FROM Stall WHERE game_id = #{gameId}")
     List<Stall> findByGameId(@Param("gameId") Long gameId);
+
+    @Update("UPDATE Stall SET exhibition_id = NULL WHERE exhibition_id = #{exhibitionId}")
+    int setStallsExhibitionIdToNull(@Param("exhibitionId") Long exhibitionId);
+
 
 }

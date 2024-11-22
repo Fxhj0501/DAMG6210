@@ -2,10 +2,7 @@ package com.dmdd.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.dmdd.dao.Show;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.*;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -20,7 +17,7 @@ public interface ShowMapper extends BaseMapper<Show>  {
     })
     int insertShow(Show show);
 
-    @Query("SELECT * FROM Show WHERE exhibition_id = #{exhibitionId}")
+    @Select("SELECT * FROM Show WHERE exhibition_id = #{exhibitionId}")
     List<Show> findByExhibitionId(@Param("exhibitionId") Long exhibitionId);
 
     @Delete("DELETE FROM Show WHERE exhibition_id = #{exhibitionId}")

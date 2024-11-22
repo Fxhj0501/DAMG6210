@@ -2,9 +2,7 @@ package com.dmdd.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.dmdd.dao.Exhibition;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 @Mapper
 public interface ExhibitionMapper extends BaseMapper<Exhibition> {
@@ -24,4 +22,10 @@ public interface ExhibitionMapper extends BaseMapper<Exhibition> {
             "VALUES (#{exhibitionName}, #{locationName}, #{startTime}, #{endTime}, #{description});"
     })
     void insertWithoutId(Exhibition exhibition);
+
+    @Delete("DELETE FROM Exhibition WHERE exhibition_id = #{exhibitionId}")
+    void deleteById(@Param("exhibitionId") Integer exhibitionId);
+
+    @Select("SELECT * FROM Exhibition WHERE exhibition_id = #{exhibitionId}")
+    Exhibition selectById(@Param("exhibitionId") Integer exhibitionId);
 }

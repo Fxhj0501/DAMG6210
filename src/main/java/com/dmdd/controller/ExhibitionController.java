@@ -1,14 +1,14 @@
 package com.dmdd.controller;
 
 import com.dmdd.dao.Exhibition;
-import com.dmdd.dao.Stall;
+import com.dmdd.dao.Show;
 import com.dmdd.mapper.*;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @RestController
@@ -25,6 +25,9 @@ public class ExhibitionController {
     @Autowired
     private ShowMapper showMapper;
 
+    @Autowired
+    private ShowPerformerMapper showPerformerMapper;
+
     @GetMapping("/exhibition")
     public PageInfo<Exhibition> exhibition(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
         PageHelper.startPage(page, size);
@@ -35,19 +38,19 @@ public class ExhibitionController {
 
     }
 
+    @Transactional
     @PostMapping("/exhibition/delete")
     public String deleteExhibition(@RequestBody Exhibition exhibition) {
-        System.out.println("delete sponsor id: " + exhibition.getExhibitionId());
+        System.out.println("delete sponsor id: " + exhibition.getExhibitionId().longValue());
         System.out.println("delete sponsor name: " + exhibition.getExhibitionName());
-        List<Stall> stalls =  stallMapper.findByExhibitionId(exhibition.getExhibitionId().longValue());
-        //Set exhibition id to null in all relative stalls
-        for(Stall stall: stalls){
-            stall.setExhibitionId(null);
-            stallMapper.updateById(stall);
-        }
+        stallMapper.setStallsExhibitionIdToNull(exhibition.getExhibitionId().longValue());
         contractMapper.deleteByExhibitionId(exhibition.getExhibitionId().longValue());
+        List<Show> shows = showMapper.findByExhibitionId(exhibition.getExhibitionId().longValue());
+        for(Show show: shows){
+            showPerformerMapper.deleteByShowId(show.getShowId().longValue());
+        }
         showMapper.deleteByExhibitionId(exhibition.getExhibitionId().longValue());
-        exhibitionMapper.deleteById(exhibition.getExhibitionId().longValue());
+        exhibitionMapper.deleteById(exhibition.getExhibitionId());
         return "delete success";
     }
 

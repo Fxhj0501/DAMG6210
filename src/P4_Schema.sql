@@ -112,7 +112,7 @@ CREATE TABLE Exhibition_Game (
 -- Stall table with game_id as FK
 CREATE TABLE Stall (
    stall_id INT PRIMARY KEY IDENTITY(1,1),
-   exhibition_id INT NOT NULL,
+   exhibition_id INT,
    game_id INT NOT NULL,
    section_number INT,
    stall_description NVARCHAR(255),
