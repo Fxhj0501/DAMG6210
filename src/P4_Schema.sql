@@ -70,7 +70,7 @@ CREATE TABLE Customer (
 );
 
 -- Order table
-CREATE TABLE [Order] (
+CREATE TABLE Orders (
      order_id INT IDENTITY(1,1) PRIMARY KEY,
      customer_id INT NOT NULL,
      order_amount DECIMAL(10, 2) CHECK (order_amount >= 0),
@@ -112,7 +112,7 @@ CREATE TABLE Exhibition_Game (
 -- Stall table with game_id as FK
 CREATE TABLE Stall (
    stall_id INT PRIMARY KEY IDENTITY(1,1),
-   exhibition_id INT NOT NULL,
+   exhibition_id INT,
    game_id INT NOT NULL,
    section_number INT,
    stall_description NVARCHAR(255),

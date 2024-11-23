@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            margin: 0;
+        }
+        #mainContent {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .delete-btn, .update-btn {
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+            padding: 5px 10px;
+            margin-right: 5px;
+        }
+        .delete-btn {
+            color: white;
+            background-color: red;
+            border-radius: 5px;
+        }
+        .delete-btn:hover {
+            background-color: darkred;
+        }
+        .update-btn {
+            color: white;
+            background-color: blue;
+            border-radius: 5px;
+        }
+        .update-btn:hover {
+            background-color: darkblue;
+        }
+        #formModal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+            display: none;
+            width: 400px;
+        }
+        #formModal h2 {
+            margin-top: 0;
+        }
+        #formModal input {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 5px;
+        }
+        #formModal button {
+            margin-right: 10px;
+        }
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .page-btn {
+            padding: 5px 10px;
+            margin: 0 5px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .page-btn.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .page-btn:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Main Content -->
+<div id="mainContent">
+    <h1>Database Management System</h1>
+    <!-- Controls -->
+    <div id="controls">
+        <select id="tableSelect">
+            <option value="sponsor">Sponsor</option>
+            <option value="contract">Contract</option>
+            <option value="exhibition">Exhibition</option>
+            <option value="stall">Stall</option>
+            <option value="stallStaff">Stall Staff</option>
+            <option value="staff">Staff</option>
+            <option value="exhibitionGame">Exhibition Game</option>
+            <option value="show">Show</option>
+            <option value="showPerformer">Show Performer</option>
+            <option value="performer">Performer</option>
+            <option value="liveShow">Live Show</option>
+            <option value="virtualShow">Virtual Show</option>
+            <option value="tickets">Tickets</option>
+            <option value="orders">Order</option>
+            <option value="customer">Customer</option>
+        </select>
+        <button id="fetchDataBtn">Fetch Data</button>
+        <button id="insertDataBtn">Insert Data</button>
+    </div>
+
+    <!-- Data Display Table -->
+    <table id="dataTable">
+        <thead>
+        <tr id="tableHeader"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- Form Modal -->
+<div id="formModal">
+    <h2 id="formTitle">Insert/Update Record</h2>
+    <form id="dataForm"></form>
+    <button id="submitBtn">Submit</button>
+    <button id="cancelBtn">Cancel</button>
+</div>
+
+<script>
+    const tableSelect = document.getElementById("tableSelect");
+    const fetchDataBtn = document.getElementById("fetchDataBtn");
+    const insertDataBtn = document.getElementById("insertDataBtn");
+    const tableHeader = document.getElementById("tableHeader");
+    const tableBody = document.getElementById("tableBody");
+    const pagination = document.getElementById("pagination");
+    const formModal = document.getElementById("formModal");
+    const dataForm = document.getElementById("dataForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const formTitle = document.getElementById("formTitle");
+
+    let currentRowData = null;
+    let isUpdate = false;
+    let currentPage = 1;
+    let pageSize = 10;
+
+    fetchDataBtn.addEventListener("click", () => {
+        fetchData(currentPage, pageSize);
+    });
+
+    insertDataBtn.addEventListener("click", () => {
+        openForm({}, false);
+    });
+
+    function fetchData(page, size) {
+        const tableName = tableSelect.value;
+        const url = `http://localhost:8080/${tableName}?page=${page}&size=${size}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                renderTable(data.list);
+                renderPagination(data);
+            })
+            .catch(error => {
+                console.error("Failed to fetch data:", error);
+                alert("Failed to fetch data. Please check the backend service.");
+            });
+    }
+
+    function renderTable(data) {
+        tableHeader.innerHTML = "";
+        tableBody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='8'>No data available</td></tr>";
+            return;
+        }
+
+        const headers = Object.keys(data[0]);
+        headers.forEach(header => {
+            const th = document.createElement("th");
+            th.textContent = header;
+            tableHeader.appendChild(th);
+        });
+        const actionTh = document.createElement("th");
+        actionTh.textContent = "Actions";
+        tableHeader.appendChild(actionTh);
+
+        data.forEach(row => {
+            const tr = document.createElement("tr");
+
+            headers.forEach(header => {
+                const td = document.createElement("td");
+                td.textContent = row[header];
+                tr.appendChild(td);
+            });
+
+            const actionTd = document.createElement("td");
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Delete";
+            deleteBtn.className = "delete-btn";
+            deleteBtn.dataset.rowData = JSON.stringify(row);
+            deleteBtn.addEventListener("click", () => {
+                const rowData = JSON.parse(deleteBtn.dataset.rowData);
+                const tableName = tableSelect.value;
+                confirmDelete(tableName,rowData);
+            });
+
+            const updateBtn = document.createElement("button");
+            updateBtn.textContent = "Update";
+            updateBtn.className = "update-btn";
+            updateBtn.dataset.rowData = JSON.stringify(row);
+            updateBtn.addEventListener("click", () => {
+                const rowData = JSON.parse(updateBtn.dataset.rowData);
+                openForm(rowData, true);
+            });
+
+            actionTd.appendChild(deleteBtn);
+            actionTd.appendChild(updateBtn);
+            tr.appendChild(actionTd);
+
+            tableBody.appendChild(tr);
+        });
+    }
+
+    function confirmDelete(tableName, rowData) {
+        const confirmDelete = confirm(`Are you sure you want to delete this record?`);
+        if (confirmDelete) {
+            deleteRecord(tableName, rowData);
+        }
+    }
+
+    function deleteRecord(tableName, rowData) {
+        const url = `http://localhost:8080/${tableName}/delete`;
+        console.log(rowData);
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(rowData),
+        })
+            .then(response => response.text())
+            .then(responseText => {
+                if (responseText === "delete success") {
+                    alert("Record deleted successfully.");
+                    fetchData(1, pageSize);
+                } else {
+                    alert("Failed to delete record. Backend response: " + responseText);
+                }
+            })
+            .catch(error => {
+                console.error("Failed to delete record:", error);
+                alert("Failed to delete record. Please check the backend service.");
+            });
+    }
+
+    function renderPagination(pageInfo) {
+        pagination.innerHTML = "";
+
+        const { pageNum, pages, hasPreviousPage, hasNextPage } = pageInfo;
+
+        if (hasPreviousPage) {
+            const prevBtn = document.createElement("button");
+            prevBtn.textContent = "Previous";
+            prevBtn.className = "page-btn";
+            prevBtn.addEventListener("click", () => {
+                fetchData(pageNum - 1, pageSize);
+            });
+            pagination.appendChild(prevBtn);
+        }
+
+        for (let i = 1; i <= pages; i++) {
+            const pageBtn = document.createElement("button");
+            pageBtn.textContent = i;
+            pageBtn.className = `page-btn ${i === pageNum ? "active" : ""}`;
+            pageBtn.addEventListener("click", () => {
+                fetchData(i, pageSize);
+            });
+            pagination.appendChild(pageBtn);
+        }
+
+        if (hasNextPage) {
+            const nextBtn = document.createElement("button");
+            nextBtn.textContent = "Next";
+            nextBtn.className = "page-btn";
+            nextBtn.addEventListener("click", () => {
+                fetchData(pageNum + 1, pageSize);
+            });
+            pagination.appendChild(nextBtn);
+        }
+    }
+
+    function openForm(rowData, updateMode) {
+        currentRowData = rowData;
+        isUpdate = updateMode;
+        dataForm.innerHTML = "";
+
+        formTitle.textContent = isUpdate ? "Update Record" : "Insert Record";
+        submitBtn.textContent = isUpdate ? "Submit Update" : "Submit Insert";
+
+        const tableName = tableSelect.value;
+
+        fetch(`http://localhost:8080/${tableName}/fields`)
+            .then(response => response.json())
+            .then(fields => {
+                fields.forEach(field => {
+                    const camelCaseField = snakeToCamelCase(field);
+
+                    const label = document.createElement("label");
+                    label.textContent = camelCaseField;
+                    label.style.display = "block";
+                    dataForm.appendChild(label);
+
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.name = camelCaseField;
+                    input.value = rowData[camelCaseField] || "";
+                    input.style.marginBottom = "10px";
+                    input.style.width = "100%";
+                    dataForm.appendChild(input);
+                });
+
+                formModal.style.display = "block";
+            })
+            .catch(error => {
+                console.error("Failed to fetch fields:", error);
+                alert("Failed to fetch fields. Please check the backend service.");
+            });
+    }
+
+    function snakeToCamelCase(str) {
+        return str.replace(/(_\w)/g, match => match[1].toUpperCase());
+    }
+
+    submitBtn.addEventListener("click", () => {
+        const formData = new FormData(dataForm);
+        const data = {};
+
+        for (const [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+
+        if (isUpdate) {
+            updateRecord(data);
+        } else {
+            insertRecord(data);
+        }
+    });
+
+    cancelBtn.addEventListener("click", () => {
+        formModal.style.display = "none";
+    });
+
+
+    function insertRecord(data) {
+        const url = `http://localhost:8080/${tableSelect.value}/insert`;
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        })
+            .then(response => response.text())
+            .then(responseText => {
+                if (responseText === "insert success") {
+                    alert("Record inserted successfully.");
+                    fetchData(tableSelect.value);
+                    formModal.style.display = "none";
+                } else {
+                    alert("Failed to insert record. Backend response: " + responseText);
+                }
+            })
+            .catch(error => {
+                console.error("Failed to insert record:", error);
+                alert("Failed to insert record. Please check the backend service.");
+            });
+    }
+
+    function updateRecord(updatedData) {
+        const url = `http://localhost:8080/${tableSelect.value}/update`;
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedData),
+        })
+            .then(response => response.text())
+            .then(responseText => {
+                if (responseText === "update success") {
+                    alert("Record updated successfully.");
+                    fetchData(tableSelect.value);
+                    formModal.style.display = "none";
+                } else {
+                    alert("Failed to update record. Backend response: " + responseText);
+                }
+            })
+            .catch(error => {
+                console.error("Failed to update record:", error);
+                alert("Failed to update record. Please check the backend service.");
+            });
+    }
+</script>
+</body>
+</html>
