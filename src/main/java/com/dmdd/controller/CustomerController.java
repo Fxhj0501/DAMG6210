@@ -18,7 +18,7 @@ public class CustomerController {
     @GetMapping("/customer")
     public PageInfo<Customer> customer(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
         PageHelper.startPage(page, size);
-        List<Customer> customers = customerMapper.selectList(null);
+        List<Customer> customers = customerMapper.selectDecryptedCustomerList();
         PageInfo<Customer> pageInfo = new PageInfo<>(customers);
         System.out.println(pageInfo);
         return pageInfo;
@@ -26,7 +26,8 @@ public class CustomerController {
 
     @PostMapping("/customer/delete")
     public String deleteCustomer(@RequestBody Customer customer) {
-        customerMapper.deleteById(customer.getCustomerId().longValue());
+        System.out.println("delete customer id: " + customer.getCustomerId());
+        customerMapper.deleteById(customer.getCustomerId());
         return "delete success";
     }
 

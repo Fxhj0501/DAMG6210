@@ -20,10 +20,9 @@ public class ShowController {
 
     @GetMapping("/show")
     public PageInfo<Show> show(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
-        PageHelper.startPage(page, size);
-        List<Show> shows = showMapper.selectList(null);
+        int offset = (page - 1) * size;
+        List<Show> shows = showMapper.selectPagedShows(offset, size);
         PageInfo<Show> pageInfo = new PageInfo<>(shows);
-        System.out.println(pageInfo);
         return pageInfo;
     }
 
@@ -42,7 +41,7 @@ public class ShowController {
 
     @PostMapping("/show/insert")
     public String insertShow(@RequestBody Show show) {
-        showMapper.insert(show);
+        showMapper.insertShow(show);
         return "insert success";
     }
 }

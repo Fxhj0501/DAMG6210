@@ -1,4 +1,5 @@
 package com.dmdd.dao;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -9,7 +10,7 @@ import java.util.Date;
 @Data
 public class Show {
 
-    @Id
+    @TableId
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer showId;
 

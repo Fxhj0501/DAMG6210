@@ -31,23 +31,42 @@ BEGIN
 END;
 
 
-    CREATE TRIGGER trg_order_delete_tickets
-        ON Orders
-        INSTEAD OF DELETE
-        AS
-    BEGIN
-        -- delete related tickets first
-        DELETE FROM Tickets
-        WHERE order_id IN (
-            SELECT order_id FROM Deleted
-        );
+CREATE TRIGGER trg_order_delete_tickets
+    ON Orders
+    INSTEAD OF DELETE
+    AS
+BEGIN
+    -- delete related tickets first
+    DELETE FROM Tickets
+    WHERE order_id IN (
+        SELECT order_id FROM Deleted
+    );
 
-        -- delete related orders
-        DELETE FROM Orders
-        WHERE order_id IN (
-            SELECT order_id FROM Deleted
-        );
-    END;
+    -- delete related orders
+    DELETE FROM Orders
+    WHERE order_id IN (
+        SELECT order_id FROM Deleted
+    );
+END;
+
+Create TRIGGER trg_EncryptCustomerEmail
+    ON Customer
+    INSTEAD OF INSERT
+    AS
+BEGIN
+    OPEN SYMMETRIC KEY encryptKey DECRYPTION BY PASSWORD = 'DAMGGroup20';
+    SET IDENTITY_INSERT Customer ON;
+    INSERT INTO Customer (customer_id, customer_email, registration_date, customer_name, customer_age,
+                          selected_genres)
+    SELECT customer_id,
+           EncryptByKey(Key_GUID('encryptKey'), customer_email),
+           registration_date,
+           customer_name,
+           customer_age,
+           selected_genres
+    FROM inserted;
+    SET IDENTITY_INSERT Customer OFF;
+END;
 
 
 
